@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexaFlow AI — Automation Agency</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --surface: #0d1117;
+    --card: #111827;
+    --accent: #00f5c4;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --text: #f0f4ff;
+    --muted: #6b7280;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    backdrop-filter: blur(20px);
+    background: rgba(6,8,16,0.7);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    font-size: 0.875rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-weight: 500;
+  }
+  .nav-links a:hover { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,245,196,0.35); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 60px 80px;
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+  }
+
+  /* Radial glow bg */
+  .hero::after {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,245,196,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  /* ── 3D SPINNING LOGO ── */
+  .logo-3d-wrapper {
+    perspective: 600px;
+    margin-bottom: 48px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .logo-3d {
+    width: 120px; height: 120px;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: spinY 8s linear infinite;
+  }
+
+  @keyframes spinY {
+    0%   { transform: rotateY(0deg) rotateX(15deg); }
+    100% { transform: rotateY(360deg) rotateX(15deg); }
+  }
+
+  /* 6 faces of a cube */
+  .face {
+    position: absolute;
+    width: 120px; height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2.2rem;
+    border: 2px solid rgba(0,245,196,0.4);
+    backface-visibility: visible;
+  }
+
+  .face-front  { background: rgba(0,245,196,0.08); transform: translateZ(60px); }
+  .face-back   { background: rgba(124,58,237,0.08); transform: rotateY(180deg) translateZ(60px); }
+  .face-left   { background: rgba(0,245,196,0.05); transform: rotateY(-90deg) translateZ(60px); }
+  .face-right  { background: rgba(124,58,237,0.05); transform: rotateY(90deg) translateZ(60px); }
+  .face-top    { background: rgba(245,158,11,0.05); transform: rotateX(90deg) translateZ(60px); }
+  .face-bottom { background: rgba(0,245,196,0.03); transform: rotateX(-90deg) translateZ(60px); }
+
+  .face svg { width: 56px; height: 56px; }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,245,196,0.08);
+    border: 1px solid rgba(0,245,196,0.25);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 28px;
+    letter-spacing: 0.5px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .badge-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.4rem, 5.5vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -2px;
+    max-width: 780px;
+    position: relative;
+    z-index: 2;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 .highlight {
+    background: linear-gradient(135deg, var(--accent) 0%, #00c9ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p {
+    max-width: 520px;
+    color: var(--muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 44px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 14px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,245,196,0.4); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 14px 32px;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+
+  /* ── STAT STRIP ── */
+  .stats-strip {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    padding: 48px 60px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(13,17,23,0.6);
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { color: var(--muted); font-size: 0.82rem; font-weight: 500; letter-spacing: 0.5px; }
+
+  /* ── SECTION ── */
+  section { padding: 100px 60px; position: relative; z-index: 1; }
+
+  .section-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1.7;
+    max-width: 520px;
+    margin-bottom: 60px;
+  }
+
+  /* ── SERVICES GRID ── */
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .service-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-card, var(--accent)), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .service-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(0,245,196,0.2);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .service-card:hover::before { opacity: 1; }
+
+  .service-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    font-size: 1.5rem;
+  }
+
+  .service-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .service-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+
+  .service-card .price-tag {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    background: rgba(0,245,196,0.08);
+    border: 1px solid rgba(0,245,196,0.15);
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  /* ── CLIENT COUNTER ── */
+  .counter-section {
+    background: linear-gradient(135deg, rgba(0,245,196,0.04) 0%, rgba(124,58,237,0.04) 100%);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    padding: 80px 60px;
+  }
+
+  .counter-section .section-title { margin: 0 auto 16px; }
+  .counter-section .section-sub { margin: 0 auto 48px; }
+
+  .counter-ring {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 3px solid rgba(0,245,196,0.2);
+    position: relative;
+    margin-bottom: 40px;
+  }
+
+  .counter-ring::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) 0%, var(--accent) calc(var(--progress, 0%) * 3.6deg), transparent calc(var(--progress, 0%) * 3.6deg));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 6px), white calc(100% - 5px));
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), white calc(100% - 5px));
+    animation: fillRing 3s ease forwards 0.5s;
+  }
+
+  @keyframes fillRing {
+    0%   { background: conic-gradient(var(--accent) 0%, transparent 0%); }
+    100% { background: conic-gradient(var(--accent) 68%, transparent 68%); }
+  }
+
+  .counter-inner {
+    text-align: center;
+  }
+
+  .counter-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+    display: block;
+  }
+
+  .counter-label { color: var(--muted); font-size: 0.82rem; font-weight: 500; }
+
+  .slots-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    max-width: 700px;
+    margin: 0 auto 40px;
+  }
+
+  .slot {
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    transition: transform 0.2s;
+  }
+
+  .slot.taken {
+    background: rgba(0,245,196,0.12);
+    border: 1px solid rgba(0,245,196,0.25);
+    color: var(--accent);
+  }
+
+  .slot.open {
+    background: rgba(255,255,255,0.03);
+    border: 1px dashed rgba(255,255,255,0.12);
+    color: var(--muted);
+  }
+
+  .slot:hover { transform: scale(1.05); }
+
+  .slots-legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 36px;
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── REVIEWS ── */
+  .reviews-section { background: var(--surface); }
+
+  .reviews-track-wrapper {
+    overflow: hidden;
+    position: relative;
+    margin-top: 60px;
+  }
+
+  .reviews-track-wrapper::before,
+  .reviews-track-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 120px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .reviews-track-wrapper::before { left: 0; background: linear-gradient(90deg, var(--surface), transparent); }
+  .reviews-track-wrapper::after  { right: 0; background: linear-gradient(-90deg, var(--surface), transparent); }
+
+  .reviews-track {
+    display: flex;
+    gap: 20px;
+    animation: scrollReviews 28s linear infinite;
+    width: max-content;
+  }
+
+  .reviews-track:hover { animation-play-state: paused; }
+
+  @keyframes scrollReviews {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .review-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px 28px;
+    width: 320px;
+    flex-shrink: 0;
+    transition: border-color 0.3s;
+  }
+
+  .review-card:hover { border-color: rgba(0,245,196,0.2); }
+
+  .review-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .reviewer-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .reviewer-info .name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .reviewer-info .role {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .stars { color: var(--accent3); font-size: 0.85rem; margin-bottom: 10px; letter-spacing: 2px; }
+  .stars .dim { color: rgba(245,158,11,0.2); }
+
+  .review-text { color: var(--muted); font-size: 0.88rem; line-height: 1.65; }
+
+  .review-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  .google-g {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4285F4 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75%);
+    flex-shrink: 0;
+  }
+
+  /* ── PROCESS ── */
+  .process-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2px;
+    max-width: 1100px;
+    margin: 0 auto;
+    background: var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .process-step {
+    background: var(--card);
+    padding: 40px 32px;
+    position: relative;
+    transition: background 0.3s;
+  }
+
+  .process-step:hover { background: #161e2d; }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: rgba(0,245,196,0.1);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .process-step h4 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 8px;
+  }
+
+  .process-step p { color: var(--muted); font-size: 0.87rem; line-height: 1.6; }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    text-align: center;
+    padding: 100px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,245,196,0.06) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .cta-section .section-title { max-width: 600px; margin: 0 auto 16px; }
+  .cta-section .section-sub { margin: 0 auto 44px; }
+
+  .cta-form {
+    display: flex;
+    gap: 12px;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 14px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .cta-input::placeholder { color: var(--muted); }
+  .cta-input:focus { border-color: rgba(0,245,196,0.4); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.82rem;
+  }
+
+  .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    color: var(--text);
+    font-size: 1.1rem;
+  }
+  .footer-logo span { color: var(--accent); }
+
+  /* ── ANIMATIONS ── */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: fadeIn 0.7s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+
+  /* scrolling reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── FLOATING GRID BG ── */
+  .grid-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    section, .hero, .stats-strip, .counter-section, .cta-section { padding-left: 24px; padding-right: 24px; }
+    .slots-grid { grid-template-columns: repeat(4, 1fr); }
+    .cta-form { flex-direction: column; border-radius: 16px; }
+    footer { flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Nexa<span>Flow</span></div>
+  <ul class="nav-links">
+    <li><a href="#services">Services</a></li>
+    <li><a href="#clients">Clients</a></li>
+    <li><a href="#process">Process</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Get Started →</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <!-- 3D SPINNING LOGO -->
+  <div class="logo-3d-wrapper fade-in">
+    <div class="logo-3d">
+      <!-- Front -->
+      <div class="face face-front">
+        <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="28" cy="28" r="20" stroke="#00f5c4" stroke-width="2.5"/>
+          <path d="M20 28 L26 34 L36 22" stroke="#00f5c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="28" cy="28" r="4" fill="#00f5c4" opacity="0.3"/>
+        </svg>
+      </div>
+      <!-- Back -->
+      <div class="face face-back">
+        <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="14" y="14" width="28" height="28" rx="6" stroke="#7c3aed" stroke-width="2.5"/>
+          <path d="M22 28h12M28 22v12" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <!-- Left -->
+      <div class="face face-left">
+        <svg viewBox="0 0 56 56" fill="none">
+          <polygon points="28,14 42,36 14,36" stroke="#00f5c4" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <!-- Right -->
+      <div class="face face-right">
+        <svg viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="14" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="5 3"/>
+        </svg>
+      </div>
+      <!-- Top -->
+      <div class="face face-top">
+        <svg viewBox="0 0 56 56" fill="none">
+          <path d="M18 28 Q28 16 38 28 Q28 40 18 28Z" stroke="#f59e0b" stroke-width="2.5" fill="none"/>
+        </svg>
+      </div>
+      <!-- Bottom -->
+      <div class="face face-bottom">
+        <svg viewBox="0 0 56 56" fill="none">
+          <path d="M20 20 L36 20 L36 36 L20 36 Z" stroke="#00f5c4" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-badge fade-in delay-1">
+    <span class="badge-dot"></span>
+    Now accepting new clients — 7 spots left
+  </div>
+
+  <h1 class="fade-in delay-2">
+    Scale Your Business With<br>
+    <span class="highlight">AI Automation</span> & Smart<br>Web Systems
+  </h1>
+
+  <p class="fade-in delay-3">
+    We build AI-powered workflows and high-converting websites that run 24/7 — so you can focus on growth, not grunt work.
+  </p>
+
+  <div class="hero-ctas fade-in delay-4">
+    <button class="btn-primary" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Claim Your Spot</button>
+    <button class="btn-secondary" onclick="document.getElementById('services').scrollIntoView({behavior:'smooth'})">See What We Do</button>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat">
+    <span class="stat-num">20</span>
+    <span class="stat-label">Max Client Slots</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">13</span>
+    <span class="stat-label">Currently Taken</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">4.7★</span>
+    <span class="stat-label">Avg Review Score</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num">3×</span>
+    <span class="stat-label">Avg Revenue Lift</span>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section id="services">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag reveal">What We Build</div>
+    <h2 class="section-title reveal">Two Paths to Growth</h2>
+    <p class="section-sub reveal">Choose AI Automation, a website that converts, or both — fully built and running in under 2 weeks.</p>
+
+    <div class="services-grid">
+      <div class="service-card reveal" style="--accent-card: #00f5c4;">
+        <div class="service-icon" style="background:rgba(0,245,196,0.1);">🤖</div>
+        <h3>AI Automation Systems</h3>
+        <p>Custom AI workflows that handle your leads, follow-ups, scheduling, and customer support automatically — 24 hours a day, zero manual work required.</p>
+        <span class="price-tag">AI Automation</span>
+      </div>
+
+      <div class="service-card reveal" style="--accent-card: #7c3aed;">
+        <div class="service-icon" style="background:rgba(124,58,237,0.1);">🌐</div>
+        <h3>High-Converting Websites</h3>
+        <p>Professionally built websites designed to turn visitors into paying clients. Fast, mobile-first, SEO-ready, and integrated with your booking or payment system.</p>
+        <span class="price-tag" style="color:#7c3aed;background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.2);">Website Build</span>
+      </div>
+
+      <div class="service-card reveal" style="--accent-card: #f59e0b;">
+        <div class="service-icon" style="background:rgba(245,158,11,0.1);">⚡</div>
+        <h3>Full AI + Web Bundle</h3>
+        <p>Get both — a stunning website that drives traffic and an AI system that converts that traffic into booked clients automatically. The complete growth stack.</p>
+        <span class="price-tag" style="color:#f59e0b;background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);">Best Value</span>
+      </div>
+
+      <div class="service-card reveal">
+        <div class="service-icon" style="background:rgba(0,245,196,0.1);">📊</div>
+        <h3>Lead Generation AI</h3>
+        <p>Automated outreach, qualification, and nurturing pipelines that continuously fill your calendar with warm, pre-qualified prospects ready to buy.</p>
+        <span class="price-tag">Add-On</span>
+      </div>
+
+      <div class="service-card reveal">
+        <div class="service-icon" style="background:rgba(124,58,237,0.1);">💬</div>
+        <h3>AI Customer Support Bot</h3>
+        <p>A smart assistant trained on your business that answers questions, qualifies leads, and books appointments without you lifting a finger.</p>
+        <span class="price-tag">Add-On</span>
+      </div>
+
+      <div class="service-card reveal">
+        <div class="service-icon" style="background:rgba(245,158,11,0.1);">🔁</div>
+        <h3>CRM & Workflow Integration</h3>
+        <p>We connect every tool you use — CRM, email, calendar, payment — into one seamless automated system that just works.</p>
+        <span class="price-tag">Add-On</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLIENT SLOTS -->
+<section id="clients" class="counter-section">
+  <div class="section-tag reveal">Availability</div>
+  <h2 class="section-title reveal">Only 20 Client Spots Total</h2>
+  <p class="section-sub reveal">We keep our client roster intentionally small to deliver exceptional, hands-on results. Once we're full, we're full.</p>
+
+  <div style="margin: 40px auto;">
+    <div class="slots-grid">
+      <!-- Taken slots: 1-13 -->
+      <div class="slot taken">✓ 01</div>
+      <div class="slot taken">✓ 02</div>
+      <div class="slot taken">✓ 03</div>
+      <div class="slot taken">✓ 04</div>
+      <div class="slot taken">✓ 05</div>
+      <div class="slot taken">✓ 06</div>
+      <div class="slot taken">✓ 07</div>
+      <div class="slot taken">✓ 08</div>
+      <div class="slot taken">✓ 09</div>
+      <div class="slot taken">✓ 10</div>
+      <div class="slot taken">✓ 11</div>
+      <div class="slot taken">✓ 12</div>
+      <div class="slot taken">✓ 13</div>
+      <!-- Open slots: 14-20 -->
+      <div class="slot open">14</div>
+      <div class="slot open">15</div>
+      <div class="slot open">16</div>
+      <div class="slot open">17</div>
+      <div class="slot open">18</div>
+      <div class="slot open">19</div>
+      <div class="slot open">20</div>
+    </div>
+
+    <div class="slots-legend">
+      <span><span class="legend-dot" style="background:var(--accent);"></span>Taken (13)</span>
+      <span><span class="legend-dot" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.1);"></span>Open (7)</span>
+    </div>
+
+    <button class="btn-primary" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">
+      Reserve Your Spot Now →
+    </button>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag reveal">How It Works</div>
+    <h2 class="section-title reveal">From Zero to Running in 14 Days</h2>
+    <p class="section-sub reveal">A clear, proven process with no fluff — just results.</p>
+
+    <div class="process-grid reveal">
+      <div class="process-step">
+        <div class="step-num">01</div>
+        <h4>Discovery Call</h4>
+        <p>We learn your business, goals, and what's slowing you down. 30 minutes, no pressure.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">02</div>
+        <h4>Custom Blueprint</h4>
+        <p>We design your exact automation or website plan — built specifically for your offer and audience.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">03</div>
+        <h4>Build & Integrate</h4>
+        <p>We build everything and connect it to your existing tools, CRM, and calendar.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">04</div>
+        <h4>Launch & Scale</h4>
+        <p>Go live, monitor performance, and watch your business grow on autopilot.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews" class="reviews-section">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="section-tag reveal">Google Reviews</div>
+    <h2 class="section-title reveal">What Clients Are Saying</h2>
+    <p class="section-sub reveal">Real reviews from real business owners who made the switch to AI-powered systems.</p>
+  </div>
+
+  <div class="reviews-track-wrapper">
+    <div class="reviews-track">
+
+      <!-- ★★★★★ 5 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">MR</div>
+          <div class="reviewer-info">
+            <div class="name">Marcus Reynolds</div>
+            <div class="role">Real Estate Agent · Atlanta, GA</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">NexaFlow completely transformed how I get leads. My AI system now books 4–6 calls a week while I sleep. ROI was clear within the first month. Absolute no-brainer.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★★ 5 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">JL</div>
+          <div class="reviewer-info">
+            <div class="name">Jasmine Liu</div>
+            <div class="role">Online Fitness Coach · Austin, TX</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">I was skeptical about AI but wow. My new website + chatbot handles all my DMs, answers questions, and sends people to my booking page. Clients say they feel like they already know me before we even talk.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★☆ 4 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">DH</div>
+          <div class="reviewer-info">
+            <div class="name">Derek Holt</div>
+            <div class="role">HVAC Business Owner · Phoenix, AZ</div>
+          </div>
+        </div>
+        <div class="stars">★★★★<span class="dim">★</span></div>
+        <p class="review-text">Great team, fast turnaround. The website looks really professional and the follow-up automation saves me easily 2 hours a day. Would give 5 stars but still getting used to the new tools — learning curve is real but worth it.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★★ 5 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">SP</div>
+          <div class="reviewer-info">
+            <div class="name">Selena Park</div>
+            <div class="role">Marketing Consultant · NYC</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">My entire onboarding process is automated now. New clients sign contracts, get welcome emails, and are added to my CRM without me touching anything. This is the future and NexaFlow made it easy.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★☆☆ 3 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(107,114,128,0.2);color:#9ca3af;">TM</div>
+          <div class="reviewer-info">
+            <div class="name">Tyler Moss</div>
+            <div class="role">E-Commerce Store Owner · Chicago, IL</div>
+          </div>
+        </div>
+        <div class="stars">★★★<span class="dim">★★</span></div>
+        <p class="review-text">The website build is solid and looks great. Took a bit longer than the 2-week estimate — more like 3 weeks by the time revisions were done. Results have been good but I expected faster delivery. Team was responsive though.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★★ 5 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">AK</div>
+          <div class="reviewer-info">
+            <div class="name">Aisha Kennedy</div>
+            <div class="role">Life Coach · Dallas, TX</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">Before NexaFlow I was manually DMing every single inquiry. Now my AI handles discovery, sends my calendar link, and even sends a reminder before calls. I've gained 8 new clients this quarter alone.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★☆ 4 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">BW</div>
+          <div class="reviewer-info">
+            <div class="name">Brandon Wu</div>
+            <div class="role">Video Production Agency · LA</div>
+          </div>
+        </div>
+        <div class="stars">★★★★<span class="dim">★</span></div>
+        <p class="review-text">Really clean website and the lead gen automation is working well. We went from 2 inbound inquiries a month to about 12. Deducting one star only because I'd love a mobile app dashboard but honestly that's minor.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★★★ 5 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">OT</div>
+          <div class="reviewer-info">
+            <div class="name">Olivia Torres</div>
+            <div class="role">Bookkeeper · Miami, FL</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">I thought AI automation was only for big companies. NexaFlow proved me wrong — even as a solo bookkeeper I now have a system that finds, qualifies, and schedules clients for me. Worth every cent.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- ★★★☆☆ 3 -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(107,114,128,0.2);color:#9ca3af;">RN</div>
+          <div class="reviewer-info">
+            <div class="name">Ryan Nash</div>
+            <div class="role">Photography Studio · Seattle, WA</div>
+          </div>
+        </div>
+        <div class="stars">★★★<span class="dim">★★</span></div>
+        <p class="review-text">Decent experience overall. The automation works but needed more tweaking than I expected before it felt natural for my brand. Their support walked me through it patiently. Still early days but seeing promise.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <!-- Duplicate first few for seamless loop -->
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">MR</div>
+          <div class="reviewer-info">
+            <div class="name">Marcus Reynolds</div>
+            <div class="role">Real Estate Agent · Atlanta, GA</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">NexaFlow completely transformed how I get leads. My AI system now books 4–6 calls a week while I sleep. ROI was clear within the first month. Absolute no-brainer.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">JL</div>
+          <div class="reviewer-info">
+            <div class="name">Jasmine Liu</div>
+            <div class="role">Online Fitness Coach · Austin, TX</div>
+          </div>
+        </div>
+        <div class="stars">★★★★★</div>
+        <p class="review-text">I was skeptical about AI but wow. My new website + chatbot handles all my DMs, answers questions, and sends people to my booking page. Clients say they feel like they already know me before we even talk.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+      <div class="review-card">
+        <div class="review-header">
+          <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">DH</div>
+          <div class="reviewer-info">
+            <div class="name">Derek Holt</div>
+            <div class="role">HVAC Business Owner · Phoenix, AZ</div>
+          </div>
+        </div>
+        <div class="stars">★★★★<span class="dim">★</span></div>
+        <p class="review-text">Great team, fast turnaround. The website looks really professional and the follow-up automation saves me easily 2 hours a day. Still getting used to the new tools — learning curve is real but worth it.</p>
+        <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta" class="cta-section">
+  <div class="section-tag reveal">Get Started</div>
+  <h2 class="section-title reveal">Ready to Run on Autopilot?</h2>
+  <p class="section-sub reveal">Drop your email and we'll reach out within 24 hours to schedule your free strategy call. Only 7 spots remain.</p>
+
+  <div class="cta-form reveal">
+    <input class="cta-input" type="email" placeholder="your@email.com" />
+    <button class="btn-primary" onclick="handleCTA()">Book a Call →</button>
+  </div>
+
+  <p style="color:var(--muted);font-size:0.78rem;margin-top:16px;position:relative;z-index:1;">No commitment. Free 30-min strategy call. We only take clients we can genuinely help.</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Nexa<span>Flow</span> AI</div>
+  <div>© 2026 NexaFlow AI. All rights reserved.</div>
+  <div style="display:flex;gap:20px;">
+    <a href="#" style="color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#00f5c4'" onmouseout="this.style.color='#6b7280'">Privacy</a>
+    <a href="#" style="color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#00f5c4'" onmouseout="this.style.color='#6b7280'">Terms</a>
+    <a href="#" style="color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='#00f5c4'" onmouseout="this.style.color='#6b7280'">Contact</a>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+
+  // CTA handler
+  function handleCTA() {
+    const input = document.querySelector('.cta-input');
+    const val = input.value.trim();
+    if (!val || !val.includes('@')) {
+      input.style.borderColor = 'rgba(239,68,68,0.5)';
+      input.placeholder = 'Please enter a valid email';
+      setTimeout(() => {
+        input.style.borderColor = '';
+        input.placeholder = 'your@email.com';
+      }, 2000);
+      return;
+    }
+    const btn = document.querySelector('.cta-section .btn-primary');
+    btn.textContent = '✓ We\'ll be in touch!';
+    btn.style.background = '#059669';
+    input.value = '';
+    input.placeholder = 'Thanks! Check your inbox soon.';
+  }
+
+  // Animate counter number
+  function animateNumber(el, target, duration = 2000) {
+    let start = null;
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = Math.min((timestamp - start) / duration, 1);
+      el.textContent = Math.floor(progress * target);
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Trigger stat animation on scroll
+  const statsObs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const nums = entry.target.querySelectorAll('.stat-num');
+        statsObs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  const strip = document.querySelector('.stats-strip');
+  if (strip) statsObs.observe(strip);
+</script>
+</body>
+</html>
