@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apex Automations — AI Automation Agency</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060810;
+    --surface: #0d1117;
+    --card: #111827;
+    --accent: #00f5c4;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --text: #f0f4ff;
+    --muted: #6b7280;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* noise */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* grid bg */
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 60px;
+    backdrop-filter: blur(20px);
+    background: rgba(6,8,16,0.8);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Syne', sans-serif; font-weight: 800;
+    font-size: 1.3rem; letter-spacing: -0.5px; color: var(--text);
+    cursor: pointer;
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links { display: flex; gap: 8px; list-style: none; }
+  .nav-links li button {
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.875rem;
+    color: var(--muted); font-weight: 500;
+    padding: 8px 14px; border-radius: 100px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .nav-links li button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .nav-links li button.active { color: var(--accent); background: rgba(0,245,196,0.08); }
+
+  .nav-cta {
+    background: var(--accent); color: #000; border: none;
+    padding: 10px 24px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.85rem;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,245,196,0.35); }
+
+  /* ── PAGE DOTS ── */
+  .page-dots {
+    position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+    z-index: 200; display: flex; flex-direction: column; gap: 10px;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.15); border: none; cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+    padding: 0;
+  }
+  .dot.active { background: var(--accent); transform: scale(1.4); }
+  .dot:hover { background: rgba(255,255,255,0.4); }
+
+  /* ── PAGE CONTAINER ── */
+  #page-container {
+    position: fixed; inset: 0; top: 72px;
+    overflow: hidden;
+  }
+
+  .page {
+    position: absolute; inset: 0;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transform: translateX(60px);
+    transition: opacity 0.45s cubic-bezier(.4,0,.2,1), transform 0.45s cubic-bezier(.4,0,.2,1);
+  }
+
+  .page.active {
+    opacity: 1; pointer-events: all; transform: translateX(0);
+  }
+  .page.exit-left { opacity: 0; transform: translateX(-60px); }
+
+  /* ── SHARED ── */
+  .section-tag {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-weight: 800; letter-spacing: -1px; line-height: 1.1; margin-bottom: 14px;
+  }
+  .section-sub {
+    color: var(--muted); font-size: 1rem; line-height: 1.7;
+    max-width: 520px; margin-bottom: 48px;
+  }
+
+  .btn-primary {
+    background: var(--accent); color: #000; border: none;
+    padding: 14px 32px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,245,196,0.4); }
+
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); padding: 14px 32px; border-radius: 100px;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.04); }
+
+  /* ── PAGE 1: HERO ── */
+  #page-home {
+    align-items: center; justify-content: center;
+    text-align: center; padding: 60px;
+    background: radial-gradient(ellipse at 50% 60%, rgba(0,245,196,0.06) 0%, transparent 65%);
+  }
+
+  .logo-3d-wrapper { perspective: 600px; margin-bottom: 44px; }
+  .logo-3d {
+    width: 120px; height: 120px; position: relative;
+    transform-style: preserve-3d;
+    animation: spinY 8s linear infinite;
+  }
+  @keyframes spinY {
+    0%   { transform: rotateY(0deg) rotateX(15deg); }
+    100% { transform: rotateY(360deg) rotateX(15deg); }
+  }
+  .face {
+    position: absolute; width: 120px; height: 120px;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(0,245,196,0.4); backface-visibility: visible;
+  }
+  .face svg { width: 56px; height: 56px; }
+  .face-front  { background: rgba(0,245,196,0.08); transform: translateZ(60px); }
+  .face-back   { background: rgba(124,58,237,0.08); transform: rotateY(180deg) translateZ(60px); }
+  .face-left   { background: rgba(0,245,196,0.05); transform: rotateY(-90deg) translateZ(60px); }
+  .face-right  { background: rgba(124,58,237,0.05); transform: rotateY(90deg) translateZ(60px); }
+  .face-top    { background: rgba(245,158,11,0.05); transform: rotateX(90deg) translateZ(60px); }
+  .face-bottom { background: rgba(0,245,196,0.03); transform: rotateX(-90deg) translateZ(60px); }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,245,196,0.08); border: 1px solid rgba(0,245,196,0.25);
+    border-radius: 100px; padding: 6px 16px;
+    font-size: 0.78rem; font-weight: 500; color: var(--accent);
+    margin-bottom: 24px; letter-spacing: 0.5px;
+  }
+  .badge-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  #page-home h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800;
+    line-height: 1.08; letter-spacing: -2px; max-width: 760px; margin-bottom: 22px;
+  }
+  #page-home h1 .highlight {
+    background: linear-gradient(135deg, var(--accent) 0%, #00c9ff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  #page-home > p {
+    max-width: 500px; color: var(--muted); font-size: 1.05rem;
+    line-height: 1.7; margin-bottom: 40px;
+  }
+  .hero-ctas { display: flex; gap: 14px; justify-content: center; }
+
+  /* stats row */
+  .stats-row {
+    display: flex; gap: 48px; justify-content: center;
+    margin-top: 56px; padding-top: 44px;
+    border-top: 1px solid var(--border);
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif; font-size: 2.2rem; font-weight: 800;
+    color: var(--accent); display: block; line-height: 1; margin-bottom: 4px;
+  }
+  .stat-label { color: var(--muted); font-size: 0.8rem; font-weight: 500; letter-spacing: 0.5px; }
+
+  /* ── PAGE 2: SERVICES ── */
+  #page-services { padding: 60px; justify-content: flex-start; }
+  #page-services .inner { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  .services-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  }
+  .service-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 30px 28px;
+    transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .service-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-card, var(--accent)), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .service-card:hover { transform: translateY(-5px); border-color: rgba(0,245,196,0.2); box-shadow: 0 16px 50px rgba(0,0,0,0.4); }
+  .service-card:hover::before { opacity: 1; }
+  .service-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 1.4rem; }
+  .service-card h3 { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+  .service-card p { color: var(--muted); font-size: 0.87rem; line-height: 1.65; }
+  .price-tag {
+    display: inline-block; margin-top: 16px;
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700;
+    color: var(--accent); background: rgba(0,245,196,0.08);
+    border: 1px solid rgba(0,245,196,0.15); padding: 3px 12px; border-radius: 100px;
+  }
+
+  /* ── PAGE 3: CLIENT SLOTS ── */
+  #page-clients {
+    align-items: center; justify-content: center; text-align: center; padding: 60px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(124,58,237,0.05) 0%, transparent 65%);
+  }
+
+  .slots-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+    max-width: 680px; margin: 0 auto 32px;
+  }
+  .slot {
+    height: 48px; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 600; font-family: 'Syne', sans-serif;
+    transition: transform 0.2s;
+  }
+  .slot.taken { background: rgba(0,245,196,0.12); border: 1px solid rgba(0,245,196,0.25); color: var(--accent); }
+  .slot.open { background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12); color: var(--muted); }
+  .slot:hover { transform: scale(1.06); }
+
+  .slots-legend { display: flex; justify-content: center; gap: 24px; font-size: 0.82rem; color: var(--muted); margin-bottom: 32px; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+
+  /* ── PAGE 4: REVIEWS ── */
+  #page-reviews { justify-content: center; padding: 60px 0; }
+  #page-reviews .inner { max-width: 1100px; margin: 0 auto; padding: 0 60px; width: 100%; }
+
+  .reviews-track-wrapper {
+    overflow: hidden; position: relative; margin-top: 48px; width: 100%;
+  }
+  .reviews-track-wrapper::before,
+  .reviews-track-wrapper::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 100px; z-index: 2; pointer-events: none;
+  }
+  .reviews-track-wrapper::before { left: 0; background: linear-gradient(90deg, var(--bg), transparent); }
+  .reviews-track-wrapper::after  { right: 0; background: linear-gradient(-90deg, var(--bg), transparent); }
+
+  .reviews-track {
+    display: flex; gap: 18px;
+    animation: scrollReviews 30s linear infinite; width: max-content;
+  }
+  .reviews-track:hover { animation-play-state: paused; }
+
+  @keyframes scrollReviews {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .review-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 26px; width: 300px; flex-shrink: 0;
+    transition: border-color 0.3s;
+  }
+  .review-card:hover { border-color: rgba(0,245,196,0.2); }
+  .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .reviewer-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+  .reviewer-info .name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; }
+  .reviewer-info .role { font-size: 0.73rem; color: var(--muted); margin-top: 1px; }
+  .stars { color: var(--accent3); font-size: 0.85rem; margin-bottom: 8px; letter-spacing: 1px; }
+  .stars .dim { color: rgba(245,158,11,0.2); }
+  .review-text { color: var(--muted); font-size: 0.86rem; line-height: 1.6; }
+  .review-source { display: flex; align-items: center; gap: 6px; margin-top: 14px; font-size: 0.73rem; color: var(--muted); opacity: 0.6; }
+  .google-g { width: 13px; height: 13px; border-radius: 50%; background: conic-gradient(#4285F4 0 25%, #EA4335 25% 50%, #FBBC05 50% 75%, #34A853 75%); flex-shrink: 0; }
+
+  /* ── PAGE 5: PROCESS ── */
+  #page-process { justify-content: center; padding: 60px; }
+  #page-process .inner { max-width: 1100px; margin: 0 auto; width: 100%; }
+
+  .process-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+    background: var(--border); border-radius: 20px; overflow: hidden;
+    border: 1px solid var(--border); margin-top: 0;
+  }
+  .process-step { background: var(--card); padding: 40px 28px; transition: background 0.3s; }
+  .process-step:hover { background: #161e2d; }
+  .step-num { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; color: rgba(0,245,196,0.1); line-height: 1; margin-bottom: 14px; }
+  .process-step h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; }
+  .process-step p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; }
+
+  /* ── PAGE 6: CTA ── */
+  #page-cta {
+    align-items: center; justify-content: center; text-align: center; padding: 60px;
+    background: radial-gradient(ellipse at 50% 50%, rgba(0,245,196,0.06) 0%, transparent 65%);
+  }
+  #page-cta .section-sub { margin: 0 auto 40px; }
+  #page-cta .section-title { max-width: 560px; margin: 0 auto 14px; }
+
+  .cta-form { display: flex; gap: 12px; max-width: 460px; margin: 0 auto; }
+  .cta-input {
+    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    border-radius: 100px; padding: 14px 22px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--text); outline: none;
+    transition: border-color 0.2s;
+  }
+  .cta-input::placeholder { color: var(--muted); }
+  .cta-input:focus { border-color: rgba(0,245,196,0.4); }
+
+  .cta-note { color: var(--muted); font-size: 0.78rem; margin-top: 16px; }
+
+  /* footer inside page 6 */
+  .page-footer {
+    margin-top: auto; padding-top: 40px; padding-bottom: 20px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    color: var(--muted); font-size: 0.8rem; width: 100%; max-width: 900px;
+  }
+  .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--text); font-size: 1rem; }
+  .footer-logo span { color: var(--accent); }
+  .footer-links { display: flex; gap: 20px; }
+  .footer-links a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--accent); }
+
+  /* ── PAGE TRANSITION ARROW HINTS ── */
+  .page-nav-hint {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 16px; z-index: 200;
+  }
+  .hint-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--muted); border-radius: 100px; padding: 8px 20px;
+    font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .hint-btn:hover { background: rgba(0,245,196,0.08); border-color: rgba(0,245,196,0.25); color: var(--accent); }
+  .hint-btn:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
+
+  @media (max-width: 768px) {
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    #page-home, #page-services, #page-clients, #page-reviews, #page-process, #page-cta { padding: 24px; }
+    .services-grid { grid-template-columns: 1fr; }
+    .process-grid { grid-template-columns: 1fr 1fr; }
+    .slots-grid { grid-template-columns: repeat(4, 1fr); }
+    .cta-form { flex-direction: column; }
+    .stats-row { gap: 28px; flex-wrap: wrap; }
+    .page-footer { flex-direction: column; gap: 12px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="goToPage(0)">Apex <span>Automations</span></div>
+  <ul class="nav-links">
+    <li><button onclick="goToPage(0)" class="active" data-page="0">Home</button></li>
+    <li><button onclick="goToPage(1)" data-page="1">Services</button></li>
+    <li><button onclick="goToPage(2)" data-page="2">Clients</button></li>
+    <li><button onclick="goToPage(3)" data-page="3">Reviews</button></li>
+    <li><button onclick="goToPage(4)" data-page="4">Process</button></li>
+  </ul>
+  <button class="nav-cta" onclick="goToPage(5)">Get Started →</button>
+</nav>
+
+<!-- SIDE DOTS -->
+<div class="page-dots">
+  <button class="dot active" onclick="goToPage(0)" title="Home"></button>
+  <button class="dot" onclick="goToPage(1)" title="Services"></button>
+  <button class="dot" onclick="goToPage(2)" title="Clients"></button>
+  <button class="dot" onclick="goToPage(3)" title="Reviews"></button>
+  <button class="dot" onclick="goToPage(4)" title="Process"></button>
+  <button class="dot" onclick="goToPage(5)" title="Get Started"></button>
+</div>
+
+<!-- BOTTOM NAV HINTS -->
+<div class="page-nav-hint">
+  <button class="hint-btn" id="btn-prev" onclick="prevPage()" disabled>← Prev</button>
+  <button class="hint-btn" id="btn-next" onclick="nextPage()">Next →</button>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  PAGE CONTAINER                         -->
+<!-- ════════════════════════════════════════ -->
+<div id="page-container">
+
+  <!-- PAGE 1: HOME -->
+  <div class="page active" id="page-home">
+    <div class="logo-3d-wrapper">
+      <div class="logo-3d">
+        <div class="face face-front">
+          <svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="20" stroke="#00f5c4" stroke-width="2.5"/><path d="M20 28 L26 34 L36 22" stroke="#00f5c4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="28" r="4" fill="#00f5c4" opacity="0.3"/></svg>
+        </div>
+        <div class="face face-back">
+          <svg viewBox="0 0 56 56" fill="none"><rect x="14" y="14" width="28" height="28" rx="6" stroke="#7c3aed" stroke-width="2.5"/><path d="M22 28h12M28 22v12" stroke="#7c3aed" stroke-width="2.5" stroke-linecap="round"/></svg>
+        </div>
+        <div class="face face-left">
+          <svg viewBox="0 0 56 56" fill="none"><polygon points="28,14 42,36 14,36" stroke="#00f5c4" stroke-width="2.5" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <div class="face face-right">
+          <svg viewBox="0 0 56 56" fill="none"><circle cx="28" cy="28" r="14" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="5 3"/></svg>
+        </div>
+        <div class="face face-top">
+          <svg viewBox="0 0 56 56" fill="none"><path d="M18 28 Q28 16 38 28 Q28 40 18 28Z" stroke="#f59e0b" stroke-width="2.5" fill="none"/></svg>
+        </div>
+        <div class="face face-bottom">
+          <svg viewBox="0 0 56 56" fill="none"><path d="M20 20 L36 20 L36 36 L20 36 Z" stroke="#00f5c4" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Now accepting new clients — 7 spots left
+    </div>
+
+    <h1>
+      Scale Your Business With<br>
+      <span class="highlight">AI Automation</span> &amp; Smart<br>Web Systems
+    </h1>
+
+    <p>We build AI-powered workflows and high-converting websites that run 24/7 — so you can focus on growth, not grunt work.</p>
+
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="goToPage(5)">Claim Your Spot</button>
+      <button class="btn-secondary" onclick="goToPage(1)">See What We Do</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-num">20</span>
+        <span class="stat-label">Max Client Slots</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">13</span>
+        <span class="stat-label">Currently Taken</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">4.7★</span>
+        <span class="stat-label">Avg Review Score</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">3×</span>
+        <span class="stat-label">Avg Revenue Lift</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: SERVICES -->
+  <div class="page" id="page-services">
+    <div class="inner">
+      <div class="section-tag">What We Build</div>
+      <h2 class="section-title">Two Paths to Growth</h2>
+      <p class="section-sub">Choose AI Automation, a website that converts, or both — fully built and running in under 2 weeks.</p>
+
+      <div class="services-grid">
+        <div class="service-card" style="--accent-card:#00f5c4;">
+          <div class="service-icon" style="background:rgba(0,245,196,0.1);">🤖</div>
+          <h3>AI Automation Systems</h3>
+          <p>Custom AI workflows that handle your leads, follow-ups, scheduling, and customer support automatically — 24 hours a day, zero manual work required.</p>
+          <span class="price-tag">AI Automation</span>
+        </div>
+        <div class="service-card" style="--accent-card:#7c3aed;">
+          <div class="service-icon" style="background:rgba(124,58,237,0.1);">🌐</div>
+          <h3>High-Converting Websites</h3>
+          <p>Professionally built websites designed to turn visitors into paying clients. Fast, mobile-first, SEO-ready, and integrated with your booking or payment system.</p>
+          <span class="price-tag" style="color:#7c3aed;background:rgba(124,58,237,0.08);border-color:rgba(124,58,237,0.2);">Website Build</span>
+        </div>
+        <div class="service-card" style="--accent-card:#f59e0b;">
+          <div class="service-icon" style="background:rgba(245,158,11,0.1);">⚡</div>
+          <h3>Full AI + Web Bundle</h3>
+          <p>Get both — a stunning website that drives traffic and an AI system that converts that traffic into booked clients automatically. The complete growth stack.</p>
+          <span class="price-tag" style="color:#f59e0b;background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.2);">Best Value</span>
+        </div>
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(0,245,196,0.1);">📊</div>
+          <h3>Lead Generation AI</h3>
+          <p>Automated outreach, qualification, and nurturing pipelines that continuously fill your calendar with warm, pre-qualified prospects ready to buy.</p>
+          <span class="price-tag">Add-On</span>
+        </div>
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(124,58,237,0.1);">💬</div>
+          <h3>AI Customer Support Bot</h3>
+          <p>A smart assistant trained on your business that answers questions, qualifies leads, and books appointments without you lifting a finger.</p>
+          <span class="price-tag">Add-On</span>
+        </div>
+        <div class="service-card">
+          <div class="service-icon" style="background:rgba(245,158,11,0.1);">🔁</div>
+          <h3>CRM &amp; Workflow Integration</h3>
+          <p>We connect every tool you use — CRM, email, calendar, payment — into one seamless automated system that just works.</p>
+          <span class="price-tag">Add-On</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 3: CLIENT SLOTS -->
+  <div class="page" id="page-clients">
+    <div class="section-tag">Availability</div>
+    <h2 class="section-title">Only 20 Client Spots Total</h2>
+    <p class="section-sub" style="margin:0 auto 40px;">We keep our client roster intentionally small to deliver exceptional, hands-on results. Once we're full, we're full.</p>
+
+    <div class="slots-grid">
+      <div class="slot taken">✓ 01</div>
+      <div class="slot taken">✓ 02</div>
+      <div class="slot taken">✓ 03</div>
+      <div class="slot taken">✓ 04</div>
+      <div class="slot taken">✓ 05</div>
+      <div class="slot taken">✓ 06</div>
+      <div class="slot taken">✓ 07</div>
+      <div class="slot taken">✓ 08</div>
+      <div class="slot taken">✓ 09</div>
+      <div class="slot taken">✓ 10</div>
+      <div class="slot taken">✓ 11</div>
+      <div class="slot taken">✓ 12</div>
+      <div class="slot taken">✓ 13</div>
+      <div class="slot open">14</div>
+      <div class="slot open">15</div>
+      <div class="slot open">16</div>
+      <div class="slot open">17</div>
+      <div class="slot open">18</div>
+      <div class="slot open">19</div>
+      <div class="slot open">20</div>
+    </div>
+
+    <div class="slots-legend">
+      <span><span class="legend-dot" style="background:var(--accent);"></span>Taken (13)</span>
+      <span><span class="legend-dot" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.1);"></span>Open (7)</span>
+    </div>
+
+    <button class="btn-primary" onclick="goToPage(5)">Reserve Your Spot Now →</button>
+  </div>
+
+  <!-- PAGE 4: REVIEWS -->
+  <div class="page" id="page-reviews">
+    <div class="inner">
+      <div class="section-tag">Google Reviews</div>
+      <h2 class="section-title">What Clients Are Saying</h2>
+      <p class="section-sub">Real reviews from real business owners who made the switch to AI-powered systems.</p>
+    </div>
+
+    <div class="reviews-track-wrapper">
+      <div class="reviews-track">
+        <!-- 5 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">MR</div>
+            <div class="reviewer-info"><div class="name">Marcus Reynolds</div><div class="role">Real Estate Agent · Atlanta, GA</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">Apex Automations completely transformed how I get leads. My AI system now books 4–6 calls a week while I sleep. ROI was clear within the first month. Absolute no-brainer.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 5 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">JL</div>
+            <div class="reviewer-info"><div class="name">Jasmine Liu</div><div class="role">Online Fitness Coach · Austin, TX</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">I was skeptical about AI but wow. My new website + chatbot handles all my DMs, answers questions, and sends people to my booking page. Clients feel like they already know me before we even talk.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 4 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">DH</div>
+            <div class="reviewer-info"><div class="name">Derek Holt</div><div class="role">HVAC Business Owner · Phoenix, AZ</div></div>
+          </div>
+          <div class="stars">★★★★<span class="dim">★</span></div>
+          <p class="review-text">Great team, fast turnaround. The website looks really professional and the follow-up automation saves me easily 2 hours a day. Would give 5 stars but still getting used to the new tools — worth it though.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 5 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">SP</div>
+            <div class="reviewer-info"><div class="name">Selena Park</div><div class="role">Marketing Consultant · NYC</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">My entire onboarding process is automated now. New clients sign contracts, get welcome emails, and are added to my CRM without me touching anything. This is the future.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 3 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(107,114,128,0.2);color:#9ca3af;">TM</div>
+            <div class="reviewer-info"><div class="name">Tyler Moss</div><div class="role">E-Commerce Owner · Chicago, IL</div></div>
+          </div>
+          <div class="stars">★★★<span class="dim">★★</span></div>
+          <p class="review-text">The website build is solid and looks great. Took a bit longer than the 2-week estimate — more like 3 weeks with revisions. Results have been good but I expected faster delivery. Team was responsive though.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 5 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">AK</div>
+            <div class="reviewer-info"><div class="name">Aisha Kennedy</div><div class="role">Life Coach · Dallas, TX</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">Before Apex Automations I was manually DMing every single inquiry. Now my AI handles discovery, sends my calendar link, and sends reminders. I've gained 8 new clients this quarter alone.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 4 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">BW</div>
+            <div class="reviewer-info"><div class="name">Brandon Wu</div><div class="role">Video Production Agency · LA</div></div>
+          </div>
+          <div class="stars">★★★★<span class="dim">★</span></div>
+          <p class="review-text">Really clean website and the lead gen automation is working well. We went from 2 inbound inquiries a month to about 12. Only wish there was a mobile app dashboard — minor thing overall.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 5 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">OT</div>
+            <div class="reviewer-info"><div class="name">Olivia Torres</div><div class="role">Bookkeeper · Miami, FL</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">I thought AI automation was only for big companies. Apex Automations proved me wrong — even as a solo bookkeeper I now have a system that finds, qualifies, and schedules clients for me. Worth every cent.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- 3 star -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(107,114,128,0.2);color:#9ca3af;">RN</div>
+            <div class="reviewer-info"><div class="name">Ryan Nash</div><div class="role">Photography Studio · Seattle, WA</div></div>
+          </div>
+          <div class="stars">★★★<span class="dim">★★</span></div>
+          <p class="review-text">Decent experience overall. The automation works but needed more tweaking than I expected before it felt natural for my brand. Their support walked me through it patiently. Still seeing promise.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <!-- duplicates for seamless loop -->
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(0,245,196,0.12);color:#00f5c4;">MR</div>
+            <div class="reviewer-info"><div class="name">Marcus Reynolds</div><div class="role">Real Estate Agent · Atlanta, GA</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">Apex Automations completely transformed how I get leads. My AI system now books 4–6 calls a week while I sleep. ROI was clear within the first month. Absolute no-brainer.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(124,58,237,0.12);color:#a78bfa;">JL</div>
+            <div class="reviewer-info"><div class="name">Jasmine Liu</div><div class="role">Online Fitness Coach · Austin, TX</div></div>
+          </div>
+          <div class="stars">★★★★★</div>
+          <p class="review-text">I was skeptical about AI but wow. My new website + chatbot handles all my DMs, answers questions, and sends people to my booking page.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="reviewer-avatar" style="background:rgba(245,158,11,0.12);color:#fbbf24;">DH</div>
+            <div class="reviewer-info"><div class="name">Derek Holt</div><div class="role">HVAC Business Owner · Phoenix, AZ</div></div>
+          </div>
+          <div class="stars">★★★★<span class="dim">★</span></div>
+          <p class="review-text">Great team, fast turnaround. The website looks really professional and the follow-up automation saves me easily 2 hours a day.</p>
+          <div class="review-source"><div class="google-g"></div> Posted on Google</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 5: PROCESS -->
+  <div class="page" id="page-process">
+    <div class="inner">
+      <div class="section-tag">How It Works</div>
+      <h2 class="section-title">From Zero to Running in 14 Days</h2>
+      <p class="section-sub">A clear, proven process with no fluff — just results.</p>
+
+      <div class="process-grid">
+        <div class="process-step">
+          <div class="step-num">01</div>
+          <h4>Discovery Call</h4>
+          <p>We learn your business, goals, and what's slowing you down. 30 minutes, no pressure, totally free.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">02</div>
+          <h4>Custom Blueprint</h4>
+          <p>We design your exact automation or website plan — built specifically for your offer and audience.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">03</div>
+          <h4>Build &amp; Integrate</h4>
+          <p>We build everything and connect it to your existing tools, CRM, calendar, and payment processor.</p>
+        </div>
+        <div class="process-step">
+          <div class="step-num">04</div>
+          <h4>Launch &amp; Scale</h4>
+          <p>Go live, monitor performance, and watch your business grow on autopilot. We're here post-launch too.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:40px;display:flex;gap:14px;">
+        <button class="btn-primary" onclick="goToPage(5)">Book Your Free Call →</button>
+        <button class="btn-secondary" onclick="goToPage(3)">Read Reviews</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE 6: GET STARTED -->
+  <div class="page" id="page-cta">
+    <div class="section-tag">Get Started</div>
+    <h2 class="section-title">Ready to Run on Autopilot?</h2>
+    <p class="section-sub">Drop your email and we'll reach out within 24 hours to schedule your free strategy call. Only 7 spots remain.</p>
+
+    <div class="cta-form">
+      <input class="cta-input" type="email" placeholder="your@email.com" id="cta-email"/>
+      <button class="btn-primary" onclick="handleCTA()">Book a Call →</button>
+    </div>
+    <p class="cta-note">No commitment. Free 30-min strategy call. We only take clients we can genuinely help.</p>
+
+    <div class="page-footer">
+      <div class="footer-logo">Apex <span>Automations</span></div>
+      <div>© 2026 Apex Automations. All rights reserved.</div>
+      <div class="footer-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-container -->
+
+<script>
+  const pages = ['page-home','page-services','page-clients','page-reviews','page-process','page-cta'];
+  const navBtns = document.querySelectorAll('.nav-links [data-page]');
+  const dots = document.querySelectorAll('.dot');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  let current = 0;
+
+  function goToPage(idx) {
+    if (idx === current) return;
+    const dir = idx > current ? 1 : -1;
+
+    // exit current
+    const oldEl = document.getElementById(pages[current]);
+    oldEl.classList.remove('active');
+    oldEl.classList.add(dir > 0 ? 'exit-left' : 'exit-right');
+    setTimeout(() => oldEl.classList.remove('exit-left','exit-right'), 500);
+
+    // enter new
+    const newEl = document.getElementById(pages[idx]);
+    newEl.style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+    newEl.style.opacity = '0';
+    newEl.style.pointerEvents = '';
+    // force reflow
+    newEl.getBoundingClientRect();
+    newEl.style.transform = '';
+    newEl.style.opacity = '';
+    newEl.classList.add('active');
+
+    current = idx;
+    updateUI();
+  }
+
+  function updateUI() {
+    // nav buttons
+    navBtns.forEach(btn => {
+      btn.classList.toggle('active', parseInt(btn.dataset.page) === current);
+    });
+    // dots
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === current));
+    // prev/next
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current === pages.length - 1;
+    // scroll page to top
+    document.getElementById(pages[current]).scrollTop = 0;
+  }
+
+  function prevPage() { if (current > 0) goToPage(current - 1); }
+  function nextPage() { if (current < pages.length - 1) goToPage(current + 1); }
+
+  // keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextPage();
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   prevPage();
+  });
+
+  // swipe support
+  let touchStartX = 0, touchStartY = 0;
+  document.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      dx < 0 ? nextPage() : prevPage();
+    }
+  });
+
+  // exit-right CSS
+  const style = document.createElement('style');
+  style.textContent = `.exit-right { opacity: 0 !important; transform: translateX(60px) !important; }`;
+  document.head.appendChild(style);
+
+  // CTA handler
+  async function handleCTA() {
+    const input = document.getElementById('cta-email');
+    const val = input.value.trim();
+    const btn = document.querySelector('#page-cta .btn-primary');
+
+    if (!val || !val.includes('@')) {
+      input.style.borderColor = 'rgba(239,68,68,0.5)';
+      input.placeholder = 'Please enter a valid email';
+      setTimeout(() => { input.style.borderColor = ''; input.placeholder = 'your@email.com'; }, 2000);
+      return;
+    }
+
+    btn.textContent = 'Sending...';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    try {
+      const res = await fetch('https://formspree.io/f/xykvpvky', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email: val })
+      });
+      if (res.ok) {
+        btn.textContent = "✓ We'll be in touch!";
+        btn.style.background = '#059669';
+        btn.style.opacity = '1';
+        btn.disabled = false;
+        input.value = '';
+        input.placeholder = 'Thanks! Check your inbox soon.';
+      } else {
+        throw new Error('server error');
+      }
+    } catch(e) {
+      btn.textContent = 'Try Again';
+      btn.style.background = 'rgba(239,68,68,0.8)';
+      btn.style.opacity = '1';
+      btn.disabled = false;
+      setTimeout(() => {
+        btn.style.background = '';
+        btn.textContent = 'Book a Call →';
+      }, 3000);
+    }
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
